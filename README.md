@@ -24,10 +24,10 @@ malloc,  free, calloc, realloc -
 allocate and free dynamic memory
 
 ## Synopsis
-- void *malloc(size_t size);
-- void free(void *_Nullable ptr);
-- void *calloc(size_t nmemb, size_t size);
-- void *realloc(void *_Nullable ptr, size_t size);
+- `void *malloc(size_t size);`
+- `void free(void *_Nullable ptr);`
+- `void *calloc(size_t nmemb, size_t size);`
+- `void *realloc(void *_Nullable ptr, size_t size);`
 
 
 ## Description
@@ -109,11 +109,7 @@ block is left untouched; it is not freed or moved.
 calloc(), malloc() and realloc() can fail  with
 the following error:
 
-`ENOMEM` Out   of  memory.   Possibly,  the  application  hit  the
-      RLIMIT_AS or RLIMIT_DATA limit described in getrlimit(2).
-      Another reason could be that the number of mappings  cre‐
-      ated  by  the caller process exceeded the limit specified
-      by /proc/sys/vm/max_map_count.
+`ENOMEM` Out   of  memory.
 
 ## Attributes
 
@@ -121,13 +117,8 @@ Functions are not thread-safe, lock have to be managed externly.
 Sorry.
 
 ## Standards
-malloc()
 
-free()
-
-calloc()
-
-realloc()
+malloc(), free(), calloc(), realloc()
 
       C11, POSIX.1-2008.
 
