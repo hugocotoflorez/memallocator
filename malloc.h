@@ -6,8 +6,7 @@
 void *__debug_get_head();
 /*
  * Memory management library
- *
- * Author: Hugo Coto Florez
+ * by Hugo Coto Florez
  *
  * Inspiration: ostep book
  */
@@ -59,15 +58,15 @@ void *__debug_get_head();
  * there are a header (header_t).
  */
 
-
-/* Page size */
-#define SIZE 4096
+/* Page size is by default DEFAULT_PAGE_SIZE, up to MAX_ALLOC_SIZE */
+#define DEFAULT_PAGE_SIZE 0x1p12 /* 4096 */
+#define MAX_ALLOC_SIZE    0x1p14 /* 16384 */
 
 /* Magic number. Used to check integrity */
-#define MAGIC  0x123456
+#define MAGIC 0x123456
 /* As pages are accesed by address and headers by offset, I use the
  * same magic number. I think its nearly impossible to access a page
- * with a header or viceversa. */
+ * with a header or viceversa. Hugo's lazzy approach #1 */
 
 typedef struct __page_t page_t;
 typedef struct __node_t node_t;
@@ -91,7 +90,6 @@ struct __page_t
     unsigned magic;   // used to check if ptr is page_t
 };
 
-
 /* Header above used memory */
 typedef struct
 {
@@ -101,41 +99,12 @@ typedef struct
 } header_t;
 
 
-/* Frees the memory space pointed to by PTR which must have been
- * returned by a previous call to malloc() or related functions.
- * Otherwise, or if PTR has already been freed, undefined behavior
- * occurs. If PTR is NULL, no operation is performed.
- *
- */
-void __free(void *ptr);
+/* Interfaces provided to user
+ * Notes about implentation can be found in malloc.c */
 
-/* Allocates SIZE bytes and returns a pointer to the allocated memory.
- * The memody is not initialized.
- */
+void  __free(void *ptr);
 void *__malloc(size_t size);
-
-/* Allocates memory for an array of NMEMB elements of SIZE bytes each
- * and returns a pointer to the allocated memory. The memory is set to
- * zero.
- */
 void *__calloc(size_t nmemb, size_t size);
-
-/* Changes the size of the memory block pointed to by PTR to
- * SIZE bytes. The contents of the memory will be unchanged in the
- * range from the start of the region up to the minimum of the old
- * and new sizes. If the new size os larger than the old size, the
- * added memory will not be initialized.
- *
- * If PTR is NULL, then the call is equivalent to malloc(size),
- * for all values of SIZE.
- *
- * If size is equal to zero, and PTR is not NULL, then the call is
- * equivalent to free(ptr)
- *
- * Unless PTR is NULL, it must have been returned by an earlier call
- * to malloc or related functions. If the area pointed to was
- * moved, a free(ptr) is done.
- */
 void *__realloc(void *ptr, size_t size);
 
 #endif // !_HALLOCATOR

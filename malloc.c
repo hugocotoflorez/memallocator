@@ -10,28 +10,32 @@
 
 /* See malloc.h for further information about
  * how this shit work and interface usage for
- * programmers.
- */
+ * programmers. */
 
 /* head is the first page.
- * If head is NULL there are no pages initialized
- */
-/* static */
-page_t         *head       = NULL;
+ * If head is NULL there are no pages initialized */
+static page_t *head = NULL;
+
+/* Unused variable, just for print info (at testing) */
 static unsigned page_count = 0;
 
+/* Just used to pass head to test.c */
 inline void *
 __debug_get_head()
 {
     return head;
 }
 
-/* Get last page. O(n) */
 static page_t *
 get_last_page()
 {
+    /* I use a linear search instead of a direct pointer
+     * because most times there are a few pages, so
+     * a loop over a few nodes is harmless and 8bytes are
+     * allways 8 bytes (Hugo's lazzy approach #2). */
     page_t *pptr = head;
 
+    /* No pages initialized */
     if (pptr == NULL)
         return NULL;
 
@@ -41,17 +45,26 @@ get_last_page()
     return pptr;
 }
 
+/* Get the free block node before PTR.
+ * PTR is a valid address in the page
+ * pointed by PPTR.*/
 static void *
-get_prev_node(page_t *pptr, node_t *cur_node)
+get_prev_node(page_t *pptr, void *ptr)
 {
+    /* For debugging reasons */
+    assert(ptr);
+    assert(pptr);
     assert(pptr->magic == MAGIC);
 
     node_t *nptr = (node_t *) (pptr + 1);
 
-    if (nptr == NULL)
-        return NULL;
-
-    while (nptr->next && nptr->next < cur_node)
+    /* Note for debugging:
+     * A SEGFAULT in the next line is not
+     * caused by this funcion, something is
+     * not assigned correctly so nptr->next
+     * never becames NULL as espected.
+     * Trust me <3 */
+    while (nptr->next && (void *) nptr->next < ptr)
         nptr = nptr->next;
 
     return nptr;
@@ -60,6 +73,17 @@ get_prev_node(page_t *pptr, node_t *cur_node)
 static node_t *
 get_best_fit(size_t size)
 {
+    /* Fit algorithm
+     * Note: algorithm can be changed by
+     * changing this funcion implementation
+     *
+     * First smallest block algorithm.
+     * This algorithm return the smallest block
+     * of SIZE or more bytes in the first page
+     * with a block that big.
+     *
+     * Its quite inefficient but simple.
+     */
     page_t *pptr;
     node_t *nptr;
     node_t *best_fit = NULL;
@@ -74,15 +98,17 @@ get_best_fit(size_t size)
 
         for (; nptr != NULL; nptr = nptr->next)
         {
-            real_size = nptr->size + sizeof(node_t) - sizeof(header_t);
+            real_size = nptr->size + sizeof(header_t);
             /* Best fit changes if size fits in current node and:
              * - best fit is not assigned yet
              * - new node size is smaller than best fit size */
             if (real_size >= size && (!best_fit || real_size < best_fit->size))
                 best_fit = nptr;
         }
+        if (best_fit != NULL)
+            return best_fit;
     }
-    return best_fit;
+    return NULL;
 }
 
 /* Return a page to os. All its contents would be lost.
@@ -107,7 +133,6 @@ __page_destroy(page_t *page)
     else
         head = page->next;
 
-
     /* Free current page */
     munmap(page, page->size);
 }
@@ -127,8 +152,12 @@ __page_create(size_t size)
     pptr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
 
     /* Page can not be allocated */
-    if (pptr == NULL)
+    if (pptr == MAP_FAILED)
+    {
+        /* Set errno as OUT OF MEMORY */
+        errno = ENOMEM;
         return NULL;
+    }
 
     /* Fill pptr header */
     *pptr = (page_t){
@@ -204,7 +233,7 @@ __free(void *ptr)
     nptr        = (node_t *) hptr;
     nptr->size  = temp_header.size + sizeof(header_t) - sizeof(node_t);
     nptr->page  = temp_header.page;
-    nptr->prev  = get_prev_node(nptr->page, nptr);
+    nptr->prev  = get_prev_node(hptr->page, ptr);
 
     /* Insert new node */
     nptr->next = nptr->prev->next;
@@ -238,13 +267,22 @@ __free(void *ptr)
 void *
 __malloc(size_t size)
 {
-    if (size == 0 || size >= SIZE)
-        return NULL;
-
     header_t *hptr;
     node_t   *nptr;
     page_t   *pptr;
-    size_t    realsize = size + sizeof(header_t);
+    size_t    realsize;
+    size_t    greater_size_needed;
+    size_t    block_size = DEFAULT_PAGE_SIZE;
+
+    /* SIZE with both page and block headers */
+    greater_size_needed = size + sizeof(page_t) + sizeof(header_t);
+
+    /* Invalid size checks */
+    if (size == 0 || greater_size_needed > MAX_ALLOC_SIZE)
+        return NULL;
+
+    /* Total size, requested size + header size */
+    realsize = size + sizeof(header_t);
 
     /* Find a free node to allocate SIZE bytes */
     nptr = get_best_fit(realsize);
@@ -252,8 +290,12 @@ __malloc(size_t size)
     /* If cant be allocated in any page, create a new one */
     if (nptr == NULL)
     {
+        /* Get a block size with at least SIZE bytes avaliable (or max size) */
+        while (greater_size_needed >= block_size && block_size < MAX_ALLOC_SIZE)
+            block_size <<= 1;
+
         /* Error at page creation */
-        if ((pptr = __page_create(SIZE)) == NULL)
+        if ((pptr = __page_create(block_size)) == NULL)
             return NULL;
 
         /* node is first page node */
@@ -281,11 +323,162 @@ __malloc(size_t size)
 void *
 __calloc(size_t nmemb, size_t size)
 {
+    void *ret = __malloc(nmemb * size);
+
+    if (ret)
+        return memset(ret, 0, nmemb * size);
+
     return NULL;
+}
+
+void *
+realloc_use_next(void *ptr, size_t size, header_t *hptr)
+{
+    /* +------------------------+
+     * | Used                   | <- ptr
+     * +------------------------+
+     * | Free                   | <- next
+     * +------------------------+
+     * First block use part of the second, and node is moved.
+     */
+    void     *next;
+    header_t *hnext;
+    node_t    nnext;
+    size_t    needed_size;
+    node_t   *nnode;
+
+    next = (char *) ptr + hptr->size;
+
+    /* Check if next is out of page */
+    if ((char *) next >= (char *) hptr->page + hptr->page->size)
+        return NULL;
+
+
+    /* Next block is not free */
+    hnext = (header_t *) next;
+    if (hnext->magic == MAGIC)
+        return NULL;
+
+    needed_size = size - hptr->size;
+    nnext       = *(node_t *) next;
+
+    /* Invalid size (not enought) */
+    if (nnext.size < needed_size)
+        return NULL;
+
+    /* Create new node for next (moved) free block */
+    nnode  = (node_t *) ((char *) next + needed_size);
+    *nnode = (node_t){
+        .size = nnext.size - needed_size,
+        .next = nnext.next,
+        .page = nnext.page,
+        .prev = nnext.prev,
+    };
+
+    /* Link new node */
+    if (nnode->prev)
+        nnode->prev->next = nnode;
+    if (nnode->next)
+        nnode->next->prev = nnode;
+
+    /* Update header size */
+    hptr->size += needed_size;
+
+    return ptr;
+}
+
+void *
+realloc_use_prev(void *ptr, int size, header_t *hptr)
+{
+    /* +------------------------+
+     * | Free                   | <- prev
+     * +------------------------+
+     * | Used                   | <- ptr
+     * +------------------------+
+     * Second block use part of the first, and header is moved.
+     */
+    header_t *nhptr; /* New header address */
+    node_t   *prev;
+
+    nhptr = (header_t *) ((char *) hptr - (size - hptr->size));
+    prev  = get_prev_node(hptr->page, ptr);
+
+    /* check if previous free block is just before current block */
+    if ((char *) (prev + 1) + prev->size != (char *) hptr)
+        return NULL;
+
+    /* Block is to big to realloc here */
+    if (prev->size < size - hptr->size)
+        return NULL;
+
+    /* Update prev free node size */
+    prev->size -= size - hptr->size;
+
+    /* Create (move) header */
+    *nhptr = (header_t){
+        .size  = size,
+        .magic = MAGIC,
+        .page  = hptr->page,
+    };
+
+    /* Copy data */
+    return memmove(nhptr + 1, ptr, size);
 }
 
 void *
 __realloc(void *ptr, size_t size)
 {
-    return NULL;
+    void     *newptr = NULL;
+    header_t *hptr;
+
+    /* Any page initialized */
+    if (head == NULL)
+    {
+        if (size)
+            return __malloc(size);
+        else
+            return NULL;
+    }
+
+    /* Allow use realloc as malloc */
+    if (ptr == NULL)
+        return __malloc(size);
+
+    /* Allow use realloc as free */
+    if (size == 0)
+        return __free(ptr), NULL;
+
+    /* Header of block to realloc */
+    hptr = (header_t *) ptr - 1;
+
+    /* New size is smaller or equal than previous one */
+    if (hptr->size >= size)
+        return NULL;
+
+    /* Try to allocate just after */
+    newptr = realloc_use_next(ptr, size, hptr);
+    if (newptr)
+        return newptr;
+
+    /* Try to allocate just before */
+    newptr = realloc_use_prev(ptr, size, hptr);
+    if (newptr)
+        return newptr;
+
+    /* A third case can happened, when using previous node
+     * and next node at the same. As this operation is hard
+     * to implement and hard to happend, a default realloc
+     * is done. (Hugo's lazzy approach #3). */
+
+    /* Default: Allocate new block and move data, then free current block */
+
+    newptr = __malloc(size);
+    if (!newptr)
+        /* out-of-memory */
+        return NULL;
+
+    memmove(newptr, ptr, hptr->size);
+    __free(ptr);
+
+    return newptr;
 }

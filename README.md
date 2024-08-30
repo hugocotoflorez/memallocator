@@ -9,7 +9,7 @@ throw the corresponding function call. Usage are specified below.
 
 > [!NOTE]
 > This memory managment interface is the new version of
-> *hallocator*, my previous malloc library. Now memory is 
+> *hallocator*, my previous malloc library. Now memory is
 > limitless (hardware dependent), calloc is implemented
 > and some other features that are hiden to user.
 
@@ -93,6 +93,9 @@ calloc(), malloc() and realloc() can fail  with
 the following error:
 
 `ENOMEM` Out   of  memory.
+
+Have to check errno when interface returns NULL,
+no errors make the program exit.
 
 ## Attributes
 
