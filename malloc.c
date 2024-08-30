@@ -1,5 +1,4 @@
 #include "malloc.h"
-#include <assert.h> // just for test
 #include <errno.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -52,11 +51,6 @@ get_last_page()
 static void *
 get_prev_node(page_t *pptr, void *ptr)
 {
-    /* For debugging reasons */
-    assert(ptr);
-    assert(pptr);
-    assert(pptr->magic == MAGIC);
-
     node_t *nptr = (node_t *) (pptr + 1);
 
     /* Note for debugging:
@@ -89,7 +83,6 @@ get_best_fit(size_t size)
     node_t *nptr;
     node_t *best_fit = NULL;
     size_t  real_size;
-    signed  assigned = 0;
 
     /* Go througth page list */
     for (pptr = head; pptr != NULL; pptr = pptr->next)
@@ -478,7 +471,6 @@ __realloc(void *ptr, size_t size)
     /* Default: Allocate new block and move data, then free current block */
 
     newptr = __malloc(size);
-    assert(newptr);
     if (!newptr)
         /* out-of-memory */
         return NULL;
