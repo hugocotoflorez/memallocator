@@ -2,7 +2,7 @@
 
 ## About
 
-This memory allocation interface allows an user to
+This memory allocation interface can be used to
 request a free chunk of memory and use it as wanted.
 Once memory is no longer required it is needes to return it
 throw the corresponding function call. Usage are specified below.
@@ -10,8 +10,8 @@ throw the corresponding function call. Usage are specified below.
 > [!NOTE]
 > This memory managment interface is the new version of
 > *hallocator*, my previous malloc library. Now memory is
-> limitless (hardware dependent), calloc is implemented
-> and some other features that are hiden to user.
+> limitless (At least can grow dynamically), calloc is implemented
+> and some other features that are hiden from user.
 
 > [!CAUTION]
 > Note for users. If you noticed a strange behaviour while
@@ -20,8 +20,7 @@ throw the corresponding function call. Usage are specified below.
 > (contact info in my profile). Thanks for your patience.
 
 ## Name
-malloc, free, calloc, realloc -
-allocate and free dynamic memory
+malloc, free, calloc, realloc - Allocate and free dynamic memory.
 
 ## Synopsis
 - `void *malloc(size_t size);`
@@ -31,26 +30,24 @@ allocate and free dynamic memory
 
 
 ## Description
-- `malloc()`
-
+- `malloc()`:
    The malloc() function allocates size bytes and returns a pointer
-   to  the  allocated  memory.   The memory is not initialized. Size must be grater than 0 (Non-gnu approach).
+   to  the  allocated  memory.   The memory is not initialized. Size must be
+   grater than 0 (Non-gnu approach).
 
-- `free()`
-
+- `free()`:
    The  free()  function  frees the memory space pointed to by ptr,
    which must have been returned by a previous call to malloc()  or
    related functions.  Otherwise, or if ptr has already been freed,
    undefined behavior occurs.  If ptr is NULL, no operation is performed.
 
-- `calloc()`
-
-   The calloc() function allocates memory for an array of nmemb elements of size bytes each and returns a pointer to the allocated
+- `calloc()`:
+   The calloc() function allocates memory for an array of nmemb elements of size
+   bytes each and returns a pointer to the allocated
    memory.  The memory is set to zero. Size must be grater than 0 (Non-gnu approach).
 
 
-- `realloc()`
-
+- `realloc()`:
    The  realloc()  function  changes  the  size of the memory block
    pointed to by ptr to size bytes.  The  contents  of  the  memory
    will  be  unchanged in the range from the start of the region up
@@ -83,7 +80,8 @@ The realloc() function return NULL if ptr is
 not  NULL and the requested size is zero; this is not considered
 an error.
 Otherwise,  the  returned  pointer may be the same as ptr if the
-allocation was not moved (e.g., there was room to expand the allocation in-place), or different from ptr if the allocation  was
+allocation was not moved (e.g., there was room to expand the allocation in-place),
+or different from ptr if the allocation  was
 moved  to  a new address.  If these functions fail, the original
 block is left untouched; it is not freed or moved.
 
