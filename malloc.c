@@ -162,10 +162,10 @@ __page_create(size_t size)
 
     /* Fill pptr header */
     *pptr = (page_t){
-        .next    = NULL,
-        .prev    = get_last_page(),
-        .size    = size,
-        .magic   = MAGIC,
+        .next  = NULL,
+        .prev  = get_last_page(),
+        .size  = size,
+        .magic = MAGIC,
 #ifdef ALLOC_TEST
         .page_id = page_count++,
 #endif
@@ -425,7 +425,9 @@ realloc_use_prev(void *ptr, int size, header_t *hptr)
     };
 
     /* Copy data */
-    return memmove(nhptr + 1, ptr, size);
+    memmove(nhptr + 1, ptr, size);
+
+    return nhptr + 1;
 }
 
 void *
@@ -476,6 +478,7 @@ __realloc(void *ptr, size_t size)
     /* Default: Allocate new block and move data, then free current block */
 
     newptr = __malloc(size);
+    assert(newptr);
     if (!newptr)
         /* out-of-memory */
         return NULL;
