@@ -7,7 +7,6 @@
 #include <sys/mman.h> // mmap, munmap
 
 #include <stdio.h>
-
 /* See malloc.h for further information about
  * how this shit work and interface usage for
  * programmers. */
@@ -16,6 +15,7 @@
  * If head is NULL there are no pages initialized */
 static page_t *head = NULL;
 
+#ifdef ALLOC_TEST
 /* Unused variable, just for print info (at testing) */
 static unsigned page_count = 0;
 
@@ -25,6 +25,7 @@ __debug_get_head()
 {
     return head;
 }
+#endif
 
 static page_t *
 get_last_page()
@@ -161,11 +162,13 @@ __page_create(size_t size)
 
     /* Fill pptr header */
     *pptr = (page_t){
-        .page_id = page_count++,
         .next    = NULL,
         .prev    = get_last_page(),
         .size    = size,
         .magic   = MAGIC,
+#ifdef ALLOC_TEST
+        .page_id = page_count++,
+#endif
     };
 
     /* Create first node */

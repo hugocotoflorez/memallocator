@@ -3,7 +3,12 @@
 
 #include <stddef.h> // size_t
 
+#define ALLOC_TEST
+
+
+#ifdef ALLOC_TEST
 void *__debug_get_head();
+#endif
 /*
  * Memory management library
  * by Hugo Coto Florez
@@ -83,11 +88,13 @@ struct __node_t
 /* First data of each page. */
 struct __page_t
 {
-    size_t   size;    // page size (with page header)
     page_t  *next;    // next page
     page_t  *prev;    // prev page
-    unsigned page_id; // page number
+    size_t   size;    // page size (with page header)
     unsigned magic;   // used to check if ptr is page_t
+#ifdef ALLOC_TEST
+    unsigned page_id; // page number
+#endif
 };
 
 /* Header above used memory */

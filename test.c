@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#define SHORTER
+#define TEST
 #include "malloc.h"
+
+#define SHORTER
 
 char
 get_alpha(void **ptrs, header_t *hptr)
@@ -18,9 +20,7 @@ print_mem_map(void **ptrs)
 {
     page_t   *pptr;
     node_t   *nptr;
-    node_t   *best_fit = NULL;
     header_t *hptr;
-    size_t    real_size;
 
 
     for (pptr = __debug_get_head(); pptr != NULL; pptr = pptr->next)
@@ -105,7 +105,6 @@ main(int argc, char *argv[])
     char  action;
     char  c;
     int   n;
-    void *r;
 
     ptrs[0] = __malloc(100); // a
     ptrs[1] = __malloc(100); // b
