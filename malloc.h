@@ -141,7 +141,6 @@ void *__malloc(size_t size);
  * as an object that large could cause later pointer subtraction to
  * overflow.
  */
-
 void *__calloc(size_t nmemb, size_t size);
 
 /*

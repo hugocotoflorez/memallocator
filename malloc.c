@@ -313,6 +313,7 @@ __malloc(size_t size)
 
     nptr->size -= realsize;
 
+    /* return the address of the first byte after the header */
     return (hptr + 1);
 }
 
