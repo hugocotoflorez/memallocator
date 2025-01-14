@@ -3,15 +3,19 @@
 #include <stdlib.h> // size_t, atexit
 #include <string.h>
 
+
+#if defined(USE_LIBC_MMAN)
+#include <sys.mmap.h>
+
+#else
 extern void *mmap(void *addr, size_t len, int prot, int flags, int fildes, off_t off);
 extern int munmap(void *addr, size_t len);
-
-#ifndef MAP_FAILED
 #define PROT_READ 1
 #define PROT_WRITE 2
 #define MAP_ANON 0x20
 #define MAP_PRIVATE 2
 #define MAP_FAILED ((void *) -1)
+
 #endif
 
 #include <stdio.h>

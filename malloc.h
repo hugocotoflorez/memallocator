@@ -4,6 +4,7 @@
 #include <stddef.h> // size_t
 
 #define ALLOC_TEST
+// #define USE_LIBC_MMAN
 
 /*
  * Memory management library
@@ -61,7 +62,7 @@
 
 /* Page size is by default DEFAULT_PAGE_SIZE, up to MAX_ALLOC_SIZE */
 #define DEFAULT_PAGE_SIZE 0x1p12 /* 4096 */
-#define MAX_ALLOC_SIZE    0x1p14 /* 16384 */
+#define MAX_ALLOC_SIZE    0x1p20 /* 1MB */
 
 /* Magic number. Used to check integrity */
 #define MAGIC 0x123456
