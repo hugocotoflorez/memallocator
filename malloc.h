@@ -5,10 +5,6 @@
 
 #define ALLOC_TEST
 
-
-#ifdef ALLOC_TEST
-void *__debug_get_head();
-#endif
 /*
  * Memory management library
  * by Hugo Coto Florez
@@ -176,5 +172,10 @@ void *__calloc(size_t nmemb, size_t size);
  * block is left untouched; it is not freed or moved.
  */
 void *__realloc(void *ptr, size_t size);
+
+#ifdef ALLOC_TEST
+/* Get the pointer to the first page */
+void *__debug_get_head();
+#endif
 
 #endif // !_HALLOCATOR

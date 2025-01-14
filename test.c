@@ -99,7 +99,7 @@ print_mem_map(void **ptrs)
 }
 
 int
-main(int argc, char *argv[])
+main(void)
 {
     void *ptrs['z' - 'a' + 1] = { 0 };
     char  action;
