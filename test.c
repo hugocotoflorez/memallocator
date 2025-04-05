@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#define USE_LIBC_MMAN
+
 #define TEST
 #include "malloc.h"
 

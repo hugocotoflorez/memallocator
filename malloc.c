@@ -3,13 +3,15 @@
 #include <stdlib.h> // size_t, atexit
 #include <string.h>
 
-
+#define USE_LIBC_MMAN
 #if defined(USE_LIBC_MMAN)
-#include <sys.mmap.h>
+#include <sys/mman.h>
 
 #else
+/* do not use libc mman */
 extern void *mmap(void *addr, size_t len, int prot, int flags, int fildes, off_t off);
 extern int munmap(void *addr, size_t len);
+
 #define PROT_READ 1
 #define PROT_WRITE 2
 #define MAP_ANON 0x20

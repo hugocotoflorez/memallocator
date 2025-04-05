@@ -3,11 +3,10 @@
 
 #include <stddef.h> // size_t
 
-#define ALLOC_TEST
-// #define USE_LIBC_MMAN
+#define ALLOC_TEST 1
 
 /*
- * Memory management library
+ * Memory allocation library
  * by Hugo Coto Florez
  *
  * Inspiration: ostep book

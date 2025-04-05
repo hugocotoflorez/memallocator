@@ -1,4 +1,7 @@
+
+#define USE_LIBC_MMAN
 #include "malloc.h"
+
 #include <assert.h>
 
 /* If no sefgault raises and no
